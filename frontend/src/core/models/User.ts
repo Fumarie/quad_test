@@ -1,15 +1,4 @@
 export interface User {
 	id: number
+	name: string
 }
-//
-// export interface TwitterUser {
-// 	id: string
-//
-// 	username: string
-//
-// 	displayName: string
-//
-// 	avatarUrl: string | null
-//
-// 	followersCount: number
-// }
