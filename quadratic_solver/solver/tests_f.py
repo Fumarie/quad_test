@@ -24,7 +24,7 @@ def get_abc(acc):
         discriminant = b**2 - 4*a*c
         if discriminant >= 0:
             break
-    sa = str(round(a, acc))
-    sb = str(round(b, acc))
-    sc = str(round(c, acc))
+    sa = round(a, acc)
+    sb = round(b, acc)
+    sc = round(c, acc)
     return sa, sb, sc

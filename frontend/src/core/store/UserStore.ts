@@ -23,10 +23,10 @@ export class UserStore {
 		try {
 			this.setCurrentUserLoading(true)
 
-			const fetchMe = (): Promise<AxiosResponse<User>> => axiosInstance.get<User>("/user/me")
+			const fetchMe = (): Promise<AxiosResponse<{user: User}>> => axiosInstance.get("/solver/me")
 			const response = yield* toFlowGeneratorFunction(fetchMe)()
 
-			this.currentUser = response.data
+			this.currentUser = response.data.user
 			// return response.data
 			console.log("Get me", this.currentUser)
 			return response.data
@@ -35,5 +35,10 @@ export class UserStore {
 		} finally {
 			this.setCurrentUserLoading(false)
 		}
+	}
+
+	logout() {
+		this.currentUser = null
+		this.rootStore.authStore.accessToken = null
 	}
 }

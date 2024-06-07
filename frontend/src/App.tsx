@@ -8,6 +8,8 @@ import MainLayout from "./Layouts/MainLayout/MainLayout.tsx";
 import {useRef, useState} from "react";
 import {useAutoRun} from "./hooks/useAutoRun.ts";
 import {getSessionCookie, removeSessionCookie, setSessionCookie} from "./core/utils/cookie.ts";
+import TestPage from "./pages/TestPage/TestPage.tsx";
+import ResultsPage from "./pages/ResultsPage/ResultsPage.tsx";
 
 const App = observer(() => {
     const {authStore} = useRootStore()
@@ -44,21 +46,27 @@ const App = observer(() => {
         <div>
             <BrowserRouter>
                 <Routes>
+                    <Route path={""} element={<MainLayout />}>
+                        <Route index element={<MainPage/>} />
+                    </Route>
+                    <Route path={"test"} element={<MainLayout />}>
+                        <Route index element={<TestPage />} />
+                    </Route>
+
                     {authStore.accessToken ?
                         <>
-                            <Route path={""} element={<MainLayout />}>
-                                <Route index element={<MainPage/>} />
+                            <Route path={"test-list"} element={<MainLayout />}>
+                                <Route index element={<ResultsPage />} />
                             </Route>
-                            <Route path={"*"} element={<Navigate to="" replace />} />
                         </>
                         :
                         <>
                             <Route path={"/login"} element={<MainLayout />}>
                                 <Route index element={<LoginPage/>} />
                             </Route>
-                            <Route path={"*"} element={<Navigate to="/login" replace />} />
                         </>
                     }
+                    <Route path={"*"} element={<Navigate to="" replace />} />
                 </Routes>
             </BrowserRouter>
         </div>

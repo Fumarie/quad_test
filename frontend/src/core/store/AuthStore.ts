@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx"
 import { RootStore } from "./RootStore.ts"
-import {AuthDto} from "../dto/AuthDto.ts";
+import {LoginDto, RegisterDto} from "../dto/AuthDto.ts";
 import {AxiosResponse} from "axios";
 import {User} from "../models/User.ts";
 import {toFlowGeneratorFunction} from "../../helpers/flow.ts";
@@ -8,10 +8,7 @@ import {axiosInstance} from "../axiosInstance.ts";
 
 interface AuthResponse {
 	user: User,
-	tokens: {
-		accessToken: string,
-		refreshToken: string
-	}
+	access: string,
 }
 
 export class AuthStore {
@@ -29,26 +26,26 @@ export class AuthStore {
 		this.accessToken = token
 	}
 
-	*register(registerData: AuthDto) {
+	*register(registerData: RegisterDto) {
 		try {
 			const register = (): Promise<AxiosResponse<AuthResponse>> =>
-				axiosInstance.post("/auth/register", registerData)
+				axiosInstance.post("/solver/register/", registerData)
 			const response = yield* toFlowGeneratorFunction(register)()
 
-			this.accessToken = response.data.tokens.accessToken
+			this.accessToken = response.data.access
 			this.rootStore.userStore.currentUser = response.data.user
 		} catch (e) {
 			console.log(e)
 		}
 	}
 
-	*login(loginData: AuthDto) {
+	*login(loginData: LoginDto) {
 		try {
 			const register = (): Promise<AxiosResponse<AuthResponse>> =>
-				axiosInstance.post("/auth/login", loginData)
+				axiosInstance.post("/solver/login/", loginData)
 			const response = yield* toFlowGeneratorFunction(register)()
 
-			this.accessToken = response.data.tokens.accessToken
+			this.accessToken = response.data.access
 			this.rootStore.userStore.currentUser = response.data.user
 
 		} catch (e) {

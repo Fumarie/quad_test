@@ -11,6 +11,5 @@ export const getSessionCookie = () => {
 }
 
 export const removeSessionCookie = () => {
-	debugger
 	Cookies.remove("sessionToken")
 }

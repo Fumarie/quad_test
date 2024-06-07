@@ -32,24 +32,9 @@ class UserView(APIView):
                 "user": user_serializer.data
             })
         else:
-            return Response({"message": "guest"})
+            return Response({"message": "Гость"})
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
 
-    class Meta:
-        model = User
-        fields = ['email', 'username', 'name', 'surname', 'password']
-
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            name=validated_data['name'],
-            surname=validated_data['surname'],
-            password=validated_data['password']
-        )
-        return user
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -80,25 +65,23 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 class Quadratic_Solver(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    authentication_classes = [JWTAuthentication]
-
     def get(self, request):
             user = request.user
-
-            print(user.id, "is_authenticated", user.is_authenticated)
 
             a = float(request.GET.get('a', 0))
             b = float(request.GET.get('b', 0))
             c = float(request.GET.get('c', 0))
+
+            print(a)
+
             roots = find_roots(a, b, c)
             if roots:
                 return JsonResponse({'roots': roots})
             else:
-                return JsonResponse({'error': 'Нет корней'}, status=400)
+                return JsonResponse({'details': 'Нет корней'}, status=400)
 
 class Quadratic_Tests(viewsets.ModelViewSet, APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [AllowAny]
     authentication_classes = [JWTAuthentication]
 
     @action(detail=False, methods=["get"], name="list")
@@ -109,7 +92,7 @@ class Quadratic_Tests(viewsets.ModelViewSet, APIView):
             test_serializer = TestSerializer(tests, many=True)
             return Response(test_serializer.data)
         else:
-            return Response({'error': 'User not authenticated.'}, status=401)
+            return Response({'details': 'Пользователь не авторизован.'}, status=401)
 
     @action(detail=False, methods=["get"], name="random")
     def random(self, request):
@@ -121,27 +104,29 @@ class Quadratic_Tests(viewsets.ModelViewSet, APIView):
     def solve(self, request):
         user = request.user
 
+        data = request.data
+        a = data.get('a')
+        b = data.get('b')
+        c = data.get('c')
+        X1r = data.get('user_x1')
+        X2r = data.get('user_x2')
+
+        X1, X2 = find_roots(float(a), float(b), float(c))
+
+        X1 = round(X1, 2)
+        X2 = round(X2, 2)
+
+        if (X1 == X1r and X2 == X2r) or (X1 == X2r and X2 == X1r):
+            res = 'true'
+        else:
+            res = 'false'
+
+        dt_stamp = datetime.now()
+
         if user.is_authenticated:
-            data = request.data
-            a = data.get('a')
-            b = data.get('b')
-            c = data.get('c')
-            X1r = data.get('user_x1')
-            X2r = data.get('user_x2')
-
-            X1, X2 = find_roots(float(a), float(b), float(c))
-
-            if (X1 == X1r and X2 == X2r) or (X1 == X2r and X2 == X1r):
-                res = 'true'
-            else:
-                res = 'false'
-
-
-            dt_stamp = datetime.now()
-
             test_data = {
                 'dt_stamp': dt_stamp,
-                'user': user.id,
+                'user': user.id if user else None,
                 'a': a,
                 'b': b,
                 'c': c,
@@ -153,9 +138,25 @@ class Quadratic_Tests(viewsets.ModelViewSet, APIView):
             }
             test_serializer = TestSerializer(data=test_data)
             if test_serializer.is_valid():
-                test_serializer.save()
-                return Response({'message': 'Test instance created successfully.'}, status=201)
+                    test_serializer.save()
+                    return Response({"result": test_serializer.data}, status=201)
             else:
                 return Response(test_serializer.errors, status=400)
         else:
-            return Response({'error': 'User not authenticated.'}, status=401)
+            test_data = {
+                'a': a,
+                'b': b,
+                'c': c,
+                'X1': X1,
+                'X2': X2,
+                'X1r': X1r,
+                'X2r': X2r,
+                'res': res
+            }
+            return Response({"result": test_data}, status=201)
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
